@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veet India – South India Sentiment Dashboard 2025–26</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+  :root {
+    --navy:   #0F1B35;
+    --navy2:  #1A2D52;
+    --pos:    #22A699;
+    --pos-lt: #D0F0EB;
+    --neu:    #F5A623;
+    --neu-lt: #FEF0D5;
+    --neg:    #D64045;
+    --neg-lt: #FAE0E1;
+    --south:  #E05C18;
+    --south-lt: #FDECD9;
+    --ph1:    #7C5CBF;
+    --ph2:    #2575FC;
+    --ph3:    #0AB68B;
+    --bg:     #F1F3F8;
+    --card:   #FFFFFF;
+    --txt:    #0F1B35;
+    --txt2:   #506080;
+    --border: #E0E6EF;
+    --tn:     #E8580C;
+    --ka:     #3A7D44;
+    --kl:     #1565C0;
+    --ts:     #7B1FA2;
+    --ap:     #C62828;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--txt); }
+
+  .top-bar {
+    background: var(--navy);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    border-bottom: 3px solid var(--south);
+  }
+  .top-bar .logo { font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .top-bar .logo span { color: var(--south); }
+  .top-bar .meta { font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; line-height: 1.6; }
+  .top-bar .meta strong { color: rgba(255,255,255,0.9); font-weight: 500; }
+
+
+
+  .phase-banner {
+    background: var(--navy2);
+    padding: 10px 40px;
+    display: flex; gap: 0; align-items: stretch;
+  }
+  .phase-seg {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 20px; flex: 1;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .phase-seg:last-child { border-right: none; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .phase-seg .label { font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.3; }
+  .phase-seg .label strong { display: block; font-size: 12px; color: #fff; font-weight: 600; }
+
+  .dashboard { padding: 24px 40px; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--txt2);
+    margin-bottom: 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .row { display: flex; gap: 16px; margin-bottom: 20px; align-items: stretch; }
+  .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 20px 22px; position: relative; overflow: hidden; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 16px 18px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.pos::before { background: var(--pos); }
+  .kpi-card.neu::before { background: var(--neu); }
+  .kpi-card.neg::before { background: var(--neg); }
+  .kpi-card.net::before { background: var(--navy); }
+  .kpi-card.tot::before { background: var(--south); }
+  .kpi-card.scr::before { background: var(--ph1); }
+  .kpi-label { font-size: 11px; color: var(--txt2); font-weight: 500; margin-bottom: 6px; }
+  .kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; }
+  .kpi-val.pos { color: var(--pos); } .kpi-val.neu { color: var(--neu); }
+  .kpi-val.neg { color: var(--neg); } .kpi-val.net { color: var(--navy); }
+  .kpi-val.tot { color: var(--south); } .kpi-val.scr { color: var(--ph1); }
+  .kpi-sub { font-size: 11px; color: var(--txt2); margin-top: 6px; }
+
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--txt); margin-bottom: 4px; }
+  .card-sub { font-size: 11px; color: var(--txt2); margin-bottom: 14px; }
+  .chart-card { flex: 1; }
+
+  .legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt2); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .stacked-bar { display: flex; height: 20px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .sb-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: 600; }
+
+  .state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .state-card {
+    border-radius: 8px; padding: 12px 14px;
+    border: 1px solid var(--border);
+  }
+  .state-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .state-n { font-size: 10px; color: var(--txt2); margin-bottom: 8px; }
+  .state-bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .state-net { font-size: 11px; font-weight: 600; }
+
+  .phase-bar-section { margin-top: 6px; }
+  .phase-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11px; }
+  .phase-bar-label { width: 60px; color: var(--txt2); flex-shrink: 0; font-size: 10px; }
+  .phase-bar-outer { flex: 1; height: 12px; background: #EEF1F7; border-radius: 3px; overflow: hidden; }
+  .phase-bar-inner { height: 100%; border-radius: 3px; }
+  .phase-bar-pct { width: 36px; text-align: right; font-weight: 600; font-size: 10px; }
+
+  .kw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .chip.pos { background: var(--pos-lt); color: #0B6B62; }
+  .chip.neg { background: var(--neg-lt); color: #8B1E21; }
+
+  .insight-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .insight-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .insight-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .insight-body { font-size: 11px; color: var(--txt2); line-height: 1.4; }
+
+  .trend { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .trend.up { background: var(--pos-lt); color: #0B6B62; }
+  .trend.dn { background: var(--neg-lt); color: #8B1E21; }
+  .trend.fl { background: var(--neu-lt); color: #7A5000; }
+
+
+
+  .footer { background: var(--navy); padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .footer p { font-size: 11px; color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">Veet<span>.</span>India — South India Sentiment Report</div>
+  <div class="meta">
+    <strong>Period: May 2025 – April 2026  ·  n = 188 (Location-Inferred Base)</strong><br>
+    States: Tamil Nadu · Karnataka · Kerala · Telangana · Andhra Pradesh<br>
+    Prepared for: Senior Leadership Review  ·  Women's Range Only · Veet Men Excluded
+  </div>
+</div>
+
+<div class="phase-banner">
+  <div class="phase-seg">
+    <div class="phase-dot" style="background:#7C5CBF;"></div>
+    <div class="label"><strong>Phase 1 — May to Nov 2025</strong>"Smoothest Way to Sexy" Bikini Ad · TV + Digital · 7 months</div>
+  </div>
+  <div class="phase-seg">
+    <div class="phase-dot" style="background:#2575FC;"></div>
+    <div class="label"><strong>Phase 2 — Dec 2025 to Jan 2026</strong>Myth Busting & Other Ads · Digital Only · 2 months</div>
+  </div>
+  <div class="phase-seg">
+    <div class="phase-dot" style="background:#0AB68B;"></div>
+    <div class="label"><strong>Phase 3 — Feb to Apr 2026</strong>Myth Busting & Other Ads · TV + Digital · 3 months</div>
+  </div>
+  <div class="phase-seg" style="flex:0.5; min-width:130px;">
+    <div class="phase-dot" style="background:#E05C18;"></div>
+    <div class="label"><strong>Base: n = 188</strong>South India · Location-Inferred</div>
+  </div>
+</div>
+
+<div class="dashboard">
+
+  <div class="section-label">Overall Brand Sentiment KPIs — South India · May 2025 – Apr 2026</div>
+  <div class="kpi-grid">
+    <div class="kpi-card tot">
+      <div class="kpi-label">Total Reviews (South)</div>
+      <div class="kpi-val tot">188</div>
+      <div class="kpi-sub">Location-inferred base</div>
+    </div>
+    <div class="kpi-card pos">
+      <div class="kpi-label">Positive Reviews</div>
+      <div class="kpi-val pos">107</div>
+      <div class="kpi-sub">56.9% share</div>
+    </div>
+    <div class="kpi-card neu">
+      <div class="kpi-label">Neutral Reviews</div>
+      <div class="kpi-val neu">49</div>
+      <div class="kpi-sub">26.1% share</div>
+    </div>
+    <div class="kpi-card neg">
+      <div class="kpi-label">Negative Reviews</div>
+      <div class="kpi-val neg">32</div>
+      <div class="kpi-sub">17.0% share</div>
+    </div>
+    <div class="kpi-card net">
+      <div class="kpi-label">Net Sentiment Score</div>
+      <div class="kpi-val net">+39.9%</div>
+      <div class="kpi-sub">vs National +40.9%</div>
+    </div>
+    <div class="kpi-card scr">
+      <div class="kpi-label">Wtd Sentiment Index</div>
+      <div class="kpi-val scr">+0.40</div>
+      <div class="kpi-sub">Range: −1.0 to +1.0</div>
+    </div>
+  </div>
+
+  <!-- ROW: Monthly trend + Quarterly -->
+  <div class="section-label">Sentiment Trend — Monthly & Quarterly</div>
+  <div class="row">
+    <div class="card chart-card" style="flex:2;">
+      <div class="card-title">Monthly Sentiment Trend — South India</div>
+      <div class="card-sub">Stacked % · Positive / Neutral / Negative per month · n=188</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#22A699;"></span>Positive %</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#F5A623;"></span>Neutral %</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#D64045;"></span>Negative %</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#7C5CBF;border-radius:1px;"></span>Phase 1</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#2575FC;border-radius:1px;"></span>Phase 2</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#0AB68B;border-radius:1px;"></span>Phase 3</span>
+      </div>
+      <div style="position:relative;width:100%;height:230px;">
+        <canvas id="trendChart" role="img" aria-label="Monthly South India sentiment trend May 2025 to April 2026">Monthly South India sentiment data.</canvas>
+      </div>
+    </div>
+
+    <div class="card" style="width:270px; flex-shrink:0;">
+      <div class="card-title">Quarterly KPI — South India</div>
+      <div class="card-sub">Absolute % · Weighted base</div>
+
+      <div style="margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:12px;font-weight:600;color:#7C5CBF;">Q2 2025</span>
+          <span class="trend up">Net +46.4%</span>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-bottom:4px;">Bikini Ad Launch · TV+Digital · n=28</div>
+        <div class="stacked-bar">
+          <div class="sb-seg" style="background:#22A699;width:57.1%;">57.1%</div>
+          <div class="sb-seg" style="background:#F5A623;width:32.1%;">32.1%</div>
+          <div class="sb-seg" style="background:#D64045;width:10.7%;">10.7%</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:12px;font-weight:600;color:#7C5CBF;">Q3 2025</span>
+          <span class="trend fl">Net +38.9%</span>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-bottom:4px;">Bikini Ad Peak · TV+Digital · n=54</div>
+        <div class="stacked-bar">
+          <div class="sb-seg" style="background:#22A699;width:53.7%;">53.7%</div>
+          <div class="sb-seg" style="background:#F5A623;width:31.5%;">31.5%</div>
+          <div class="sb-seg" style="background:#D64045;width:14.8%;">14.8%</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:12px;font-weight:600;color:#2575FC;">Q4 2025</span>
+          <span class="trend dn">Net +30.8%</span>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-bottom:4px;">Bikini→Myth Busting transition · n=52</div>
+        <div class="stacked-bar">
+          <div class="sb-seg" style="background:#22A699;width:53.8%;">53.8%</div>
+          <div class="sb-seg" style="background:#F5A623;width:23.1%;">23.1%</div>
+          <div class="sb-seg" style="background:#D64045;width:23.1%;">23.1%</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:12px;font-weight:600;color:#0AB68B;">Q1 2026</span>
+          <span class="trend up">Net +42.9%</span>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-bottom:4px;">Myth Busting TV+Digital · Best quarter · n=42</div>
+        <div class="stacked-bar">
+          <div class="sb-seg" style="background:#22A699;width:59.5%;">59.5%</div>
+          <div class="sb-seg" style="background:#F5A623;width:23.8%;">23.8%</div>
+          <div class="sb-seg" style="background:#D64045;width:16.7%;">16.7%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW: State breakdown + Phase comparison + South vs National -->
+  <div class="section-label">State-Level Breakdown & South vs National Comparison</div>
+  <div class="row">
+
+    <div class="card" style="flex:1.4;">
+      <div class="card-title">Sentiment by State</div>
+      <div class="card-sub">Positive % and Net Sentiment per South Indian state</div>
+      <div class="state-grid">
+
+        <div class="state-card" style="background:#FFF8F5; border-color:#F0C4A0;">
+          <div class="state-name" style="color:var(--tn);">Tamil Nadu</div>
+          <div class="state-n">n=69 · Largest base</div>
+          <div class="state-bar">
+            <div style="background:#22A699;width:50.7%;"></div>
+            <div style="background:#F5A623;width:30.4%;"></div>
+            <div style="background:#D64045;width:18.8%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);margin-top:3px;">
+            <span>Pos 50.7%</span><span>Neu 30.4%</span><span>Neg 18.8%</span>
+          </div>
+          <div class="state-net" style="color:var(--tn);margin-top:6px;">Net +26.1% — Lowest in South</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Conservative pushback on Bikini Ad strongest here</div>
+        </div>
+
+        <div class="state-card" style="background:#F4FBF5; border-color:#A5D6B0;">
+          <div class="state-name" style="color:var(--ka);">Karnataka</div>
+          <div class="state-n">n=41 · Bengaluru-heavy</div>
+          <div class="state-bar">
+            <div style="background:#22A699;width:58.5%;"></div>
+            <div style="background:#F5A623;width:24.4%;"></div>
+            <div style="background:#D64045;width:17.1%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);margin-top:3px;">
+            <span>Pos 58.5%</span><span>Neu 24.4%</span><span>Neg 17.1%</span>
+          </div>
+          <div class="state-net" style="color:var(--ka);margin-top:6px;">Net +43.9% — Urban metro effect</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Bengaluru audience most receptive to bold campaigns</div>
+        </div>
+
+        <div class="state-card" style="background:#E8F4FD; border-color:#90CAF9;">
+          <div class="state-name" style="color:var(--kl);">Kerala</div>
+          <div class="state-n">n=34 · Highest positive</div>
+          <div class="state-bar">
+            <div style="background:#22A699;width:70.6%;"></div>
+            <div style="background:#F5A623;width:17.6%;"></div>
+            <div style="background:#D64045;width:11.8%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);margin-top:3px;">
+            <span>Pos 70.6%</span><span>Neu 17.6%</span><span>Neg 11.8%</span>
+          </div>
+          <div class="state-net" style="color:var(--kl);margin-top:6px;">Net +64.7% — Best performing state</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">High digital literacy, progressive consumer sentiment</div>
+        </div>
+
+        <div class="state-card" style="background:#F9F0FD; border-color:#CE93D8;">
+          <div class="state-name" style="color:var(--ts);">Telangana</div>
+          <div class="state-n">n=27 · Hyderabad-driven</div>
+          <div class="state-bar">
+            <div style="background:#22A699;width:51.9%;"></div>
+            <div style="background:#F5A623;width:29.6%;"></div>
+            <div style="background:#D64045;width:18.5%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);margin-top:3px;">
+            <span>Pos 51.9%</span><span>Neu 29.6%</span><span>Neg 18.5%</span>
+          </div>
+          <div class="state-net" style="color:var(--ts);margin-top:6px;">Net +33.3% — Mixed signals</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">High neutral — awareness building needed</div>
+        </div>
+
+        <div class="state-card" style="background:#FFF0F0; border-color:#FFCDD2; grid-column:span 2;">
+          <div class="state-name" style="color:var(--ap);">Andhra Pradesh</div>
+          <div class="state-n">n=17 · Smallest base — interpret directionally only</div>
+          <div class="state-bar">
+            <div style="background:#22A699;width:58.8%;"></div>
+            <div style="background:#F5A623;width:23.5%;"></div>
+            <div style="background:#D64045;width:17.6%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);margin-top:3px;">
+            <span>Pos 58.8%</span><span>Neu 23.5%</span><span>Neg 17.6%</span>
+          </div>
+          <div class="state-net" style="color:var(--ap);margin-top:6px;">Net +47.1% — Strong positive, low base</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="width:220px;flex-shrink:0;">
+      <div class="card-title">Phase Shift — South India</div>
+      <div class="card-sub">Sentiment by campaign phase</div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:600;color:#7C5CBF;margin-bottom:8px;">Phase 1 — Bikini Ad</div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Positive</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:52.0%;background:#22A699;"></div></div>
+          <div class="phase-bar-pct" style="color:#22A699;">52.0%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Neutral</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:28.6%;background:#F5A623;"></div></div>
+          <div class="phase-bar-pct" style="color:#F5A623;">28.6%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Negative</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:19.4%;background:#D64045;"></div></div>
+          <div class="phase-bar-pct" style="color:#D64045;">19.4%</div>
+        </div>
+        <div style="font-size:10px;margin-top:6px;color:var(--txt2);">Net: +32.6%  ·  Conservative pushback on Bikini Ad</div>
+      </div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:600;color:#2575FC;margin-bottom:8px;">Phase 2 — Myth Busting & Other Ads</div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Positive</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:44.1%;background:#22A699;"></div></div>
+          <div class="phase-bar-pct" style="color:#22A699;">44.1%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Neutral</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:32.4%;background:#F5A623;"></div></div>
+          <div class="phase-bar-pct" style="color:#F5A623;">32.4%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Negative</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:23.5%;background:#D64045;"></div></div>
+          <div class="phase-bar-pct" style="color:#D64045;">23.5%</div>
+        </div>
+        <div style="font-size:10px;margin-top:6px;color:var(--neg);">Net: +20.6%  ·  Weakest phase for South India</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#0AB68B;margin-bottom:8px;">Phase 3 — Myth Busting & Other Ads</div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Positive</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:76.9%;background:#22A699;"></div></div>
+          <div class="phase-bar-pct" style="color:#22A699;">76.9%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Neutral</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:15.4%;background:#F5A623;"></div></div>
+          <div class="phase-bar-pct" style="color:#F5A623;">15.4%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Negative</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:7.7%;background:#D64045;"></div></div>
+          <div class="phase-bar-pct" style="color:#D64045;">7.7%</div>
+        </div>
+        <div style="font-size:10px;margin-top:6px;color:var(--pos);">Net: +69.2%  ·  Strongest phase for South India</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW: Two focused lenses -->
+  <div class="section-label">Two Internal Lenses — Cultural Resonance & Skin Perception · South India</div>
+  <div class="row">
+
+    <!-- LENS 1: CULTURAL RESONANCE -->
+    <div class="card" style="flex:1;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="width:8px;height:28px;border-radius:2px;background:#7C5CBF;flex-shrink:0;"></div>
+        <div class="card-title">Lens 1 — Cultural Resonance</div>
+      </div>
+      <div class="card-sub">Do Veet's campaigns connect culturally with South Indian consumers?</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;">
+        <div style="background:#F4F0FB;border-radius:8px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:#7C5CBF;margin-bottom:6px;">Resonating signals</div>
+          <div class="kw-chips">
+            <span class="chip pos">empowering ad</span>
+            <span class="chip pos">body positivity</span>
+            <span class="chip pos">parlour replacement</span>
+            <span class="chip pos">normalising grooming</span>
+            <span class="chip pos">relatable messaging</span>
+          </div>
+        </div>
+        <div style="background:#FEF4F4;border-radius:8px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:#D64045;margin-bottom:6px;">Non-resonating signals</div>
+          <div class="kw-chips">
+            <span class="chip neg">too bold ad</span>
+            <span class="chip neg">culturally inappropriate</span>
+            <span class="chip neg">uncomfortable with family</span>
+            <span class="chip neg">not Indian values</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#F8F9FC;border-radius:8px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--txt);margin-bottom:8px;">By State — Cultural Comfort with Bikini Ad</div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:90px;color:var(--kl);">Kerala</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:82%;background:#1565C0;"></div></div>
+          <div class="phase-bar-pct" style="color:#1565C0;">High</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:90px;color:var(--ka);">Karnataka</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:65%;background:#3A7D44;"></div></div>
+          <div class="phase-bar-pct" style="color:#3A7D44;">Moderate</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:90px;color:var(--ap);">Andhra P.</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:52%;background:#C62828;"></div></div>
+          <div class="phase-bar-pct" style="color:#C62828;">Mixed</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:90px;color:var(--ts);">Telangana</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:42%;background:#7B1FA2;"></div></div>
+          <div class="phase-bar-pct" style="color:#7B1FA2;">Low-Mod</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:90px;color:var(--tn);">Tamil Nadu</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:30%;background:#E8580C;"></div></div>
+          <div class="phase-bar-pct" style="color:#E8580C;">Low</div>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:6px;">Directional — based on negative keyword concentration by state</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:#F4F0FB;font-size:12px;color:#7C5CBF;">→</div>
+          <div><div class="insight-title">Phase 1 cultural pushback was real but minority</div>
+          <div class="insight-body">~19% of Phase 1 South India reviews flagged cultural discomfort with the Bikini Ad. Concentrated in Tamil Nadu and Telangana, primarily on Twitter/X. The majority — 52% — responded positively to the empowerment angle.</div></div>
+        </div>
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:#F4F0FB;font-size:12px;color:#7C5CBF;">→</div>
+          <div><div class="insight-title">Myth Busting & Other Ads felt more culturally neutral</div>
+          <div class="insight-body">Phase 2 and 3 saw near-zero "culturally inappropriate" signals. Product-functional ads (wax strips, sensitive skin, razor comparison) bypassed the cultural sensitivity entirely — though Phase 2's weakest overall sentiment suggests digital-only reach was the drag, not content.</div></div>
+        </div>
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:#E8F5E9;font-size:12px;color:#3A7D44;">→</div>
+          <div><div class="insight-title">Kerala is culturally aligned — a template market</div>
+          <div class="insight-body">Kerala's 70.6% positive and absence of "culturally inappropriate" signals suggests the bold, empowerment-led positioning works well here. Could be used as a test market for bolder future campaigns before broader South India rollout.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LENS 2: SKIN DARKENING PERCEPTION -->
+    <div class="card" style="flex:1;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="width:8px;height:28px;border-radius:2px;background:#E05C18;flex-shrink:0;"></div>
+        <div class="card-title">Lens 2 — Skin Darkening Perception</div>
+      </div>
+      <div class="card-sub">Is there a consumer belief that Veet darkens skin? What's the signal strength?</div>
+
+      <div style="background:#FEF4F4;border-radius:8px;padding:14px;margin:12px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:#8B1E21;">Skin darkening-related negative keywords</div>
+          <div style="font-size:11px;color:var(--txt2);">% of all negative reviews</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:130px;">dark patches</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:38%;background:#D64045;"></div></div>
+          <div class="phase-bar-pct" style="color:#D64045;">~38%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:130px;">hyperpigmentation</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:28%;background:#D64045;"></div></div>
+          <div class="phase-bar-pct" style="color:#D64045;">~28%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:130px;">skin rash/redness</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:22%;background:#E8A838;"></div></div>
+          <div class="phase-bar-pct" style="color:#E8A838;">~22%</div>
+        </div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label" style="width:130px;">burning sensation</div>
+          <div class="phase-bar-outer"><div class="phase-bar-inner" style="width:18%;background:#E8A838;"></div></div>
+          <div class="phase-bar-pct" style="color:#E8A838;">~18%</div>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:8px;">Note: "dark patches" and "hyperpigmentation" are South India-specific — not prominent in national-level negative keyword data</div>
+      </div>
+
+      <div style="background:#FFF8F5;border-radius:8px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--south);margin-bottom:6px;">Signal breakdown — where this concern surfaces most</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#E05C18;flex-shrink:0;"></span><span>Tamil Nadu — highest frequency</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7B1FA2;flex-shrink:0;"></span><span>Telangana — second highest</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#C62828;flex-shrink:0;"></span><span>Andhra Pradesh — present</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#3A7D44;flex-shrink:0;"></span><span>Kerala — minimal signal</span></div>
+        </div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:8px;">Skin darkening concern correlates with states where deeper skin tones are more prevalent and skin tone sensitivity is higher</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:var(--neg-lt);font-size:12px;color:#D64045;">!</div>
+          <div><div class="insight-title">Skin darkening is a real and active concern — not a fringe signal</div>
+          <div class="insight-body">"Dark patches" and "hyperpigmentation" together account for approximately 38–66% of the negative reviews in South India. This is not a small edge case — it is the dominant negative theme in southern markets and likely suppresses trial among first-time buyers.</div></div>
+        </div>
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:var(--neg-lt);font-size:12px;color:#D64045;">!</div>
+          <div><div class="insight-title">Concern is about long-term use, not single application</div>
+          <div class="insight-body">Review language suggests the skin darkening perception builds over repeated use — "over time," "after a few months." This is harder to counter with a single campaign and may require a targeted ingredient communication or a dermatologist partnership in South India specifically.</div></div>
+        </div>
+        <div class="insight-row" style="margin-bottom:0;">
+          <div class="insight-icon" style="background:var(--pos-lt);font-size:12px;color:#22A699;">→</div>
+          <div><div class="insight-title">Myth Busting & Other Ads did not address this directly</div>
+          <div class="insight-body">Neither Phase 2 nor Phase 3 ads appear to have tackled the skin darkening belief head-on. The positive sentiment recovery in Phase 3 was driven by product efficacy and wax strip messaging — not by addressing this specific South India concern. It remains an open gap.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM: Keywords reference row -->
+  <div class="section-label">Keyword Reference — South India Positive & Negative Themes</div>
+  <div class="row">
+    <div class="card" style="flex:1;">
+      <div class="card-title">All Positive Keywords</div>
+      <div class="kw-chips" style="margin-top:8px;">
+        <span class="chip pos">smooth skin</span>
+        <span class="chip pos">parlour replacement</span>
+        <span class="chip pos">painless</span>
+        <span class="chip pos">no irritation</span>
+        <span class="chip pos">works on dark skin</span>
+        <span class="chip pos">fast delivery</span>
+        <span class="chip pos">no redness</span>
+        <span class="chip pos">sensitive formula</span>
+        <span class="chip pos">gentle</span>
+        <span class="chip pos">derma tested</span>
+        <span class="chip pos">wax strips</span>
+        <span class="chip pos">no ammonia smell</span>
+        <span class="chip pos">empowering ad</span>
+        <span class="chip pos">body positivity</span>
+      </div>
+    </div>
+    <div class="card" style="flex:1;">
+      <div class="card-title">All Negative Keywords</div>
+      <div class="kw-chips" style="margin-top:8px;">
+        <span class="chip neg">dark patches</span>
+        <span class="chip neg">hyperpigmentation</span>
+        <span class="chip neg">skin rash</span>
+        <span class="chip neg">burning sensation</span>
+        <span class="chip neg">too bold ad</span>
+        <span class="chip neg">culturally inappropriate</span>
+        <span class="chip neg">coarse hair not removed</span>
+        <span class="chip neg">thick hair ineffective</span>
+        <span class="chip neg">parlour still better</span>
+        <span class="chip neg">expensive</span>
+        <span class="chip neg">broken seal</span>
+        <span class="chip neg">counterfeit</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>Veet India — South India Sentiment Report · May 2025–Apr 2026 · n=188 (Location-Inferred) · Tamil Nadu · Karnataka · Kerala · Telangana · Andhra Pradesh</p>
+  <p>Women's Range Only · Veet Men Excluded · Age / Gender / City Tier Excluded (not reliably inferable) · Net Sentiment = (Pos−Neg)/Total</p>
+</div>
+
+<script>
+const months  = ['May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26','Mar-26','Apr-26'];
+const posData = [61.5, 53.3, 64.7, 52.6, 44.4, 58.8, 50.0, 52.6, 33.3, 60.0, 91.7, 75.0];
+const neuData = [23.1, 40.0, 23.5, 26.3, 44.4, 17.6, 25.0, 26.3, 40.0, 20.0,  8.3,  8.3];
+const negData = [15.4,  6.7, 11.8, 21.1, 11.1, 23.5, 25.0, 21.1, 26.7, 20.0,  0.0, 16.7];
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      { label: 'Positive %', data: posData, backgroundColor: '#22A699', stack: 'sent' },
+      { label: 'Neutral %',  data: neuData, backgroundColor: '#F5A623', stack: 'sent' },
+      { label: 'Negative %', data: negData, backgroundColor: '#D64045', stack: 'sent' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%` } }
+    },
+    scales: {
+      x: { stacked: true, ticks: { font: { size: 10 }, autoSkip: false }, grid: { display: false } },
+      y: { stacked: true, max: 100, ticks: { callback: v => v+'%', font: { size: 10 } }, grid: { color: '#EEF1F7' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
